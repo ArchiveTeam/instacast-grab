@@ -57,7 +57,7 @@ if not WGET_LUA:
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = "20150615.01"
+VERSION = "20150615.02"
 USER_AGENT = 'ArchiveTeam'
 TRACKER_ID = 'instacast'
 TRACKER_HOST = 'tracker.archiveteam.org'
@@ -197,11 +197,8 @@ class WgetArgs(object):
         assert item_type in ('item')
         
         if item_type == 'item':
-            suffixesa = string.digits + string.ascii_lowercase
-            for url in ['https://instacastcloud.com/shared/episode/{0}{1}'.format(item_value, a) for a in suffixesa]:
-                wget_args.append(url)
-            for url in ['https://instacastcloud.com/b/{0}{1}'.format(item_value, a) for a in suffixesa]:
-                wget_args.append(url)
+            wget_args.append('https://instacastcloud.com/shared/episode/{0}'.format(item_value))
+            wget_args.append('https://instacastcloud.com/b/{0}'.format(item_value))
         else:
             raise Exception('Unknown item')
         

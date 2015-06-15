@@ -9,6 +9,36 @@ local item_value = os.getenv('item_value')
 local downloaded = {}
 local addedtolist = {}
 
+-- do not download following static files:
+downloaded["https://instacastcloud.com/bootstrap/css/bootstrap.min.css"] = true
+downloaded["https://instacastcloud.com/scripts/jquery-1.11.1.min.js"] = true
+downloaded["https://instacastcloud.com/css/site.css"] = true
+downloaded["https://instacastcloud.com/mediaelement/mediaelement-and-player.min.js"] = true
+downloaded["https://instacastcloud.com/mediaelement/mediaelementplayer.min.css"] = true
+downloaded["https://instacastcloud.com/shared/episode/mediaelement/flashmediaelement.swf"] = true
+downloaded["https://instacastcloud.com/bootstrap/js/bootstrap.min.js"] = true
+downloaded["https://instacastcloud.com/dashboard/contact"] = true
+downloaded["https://instacastcloud.com/signin"] = true
+downloaded["https://instacastcloud.com/dashboard"] = true
+downloaded["http://vemedio.com/support/contact"] = true
+downloaded["http://vemedio.com/discontinued/"] = true
+downloaded["http://vemedio.com/"] = true
+downloaded["http://vemedio.com/instacast"] = true
+downloaded["https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"] = true
+downloaded["https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"] = true
+downloaded["https://instacastcloud.com/bootstrap/fonts/glyphicons-halflings-regular.eot"] = true
+downloaded["https://instacastcloud.com/bootstrap/fonts/glyphicons-halflings-regular.eot?"] = true
+downloaded["https://instacastcloud.com/bootstrap/fonts/glyphicons-halflings-regular.woff"] = true
+downloaded["https://instacastcloud.com/bootstrap/fonts/glyphicons-halflings-regular.ttf"] = true
+downloaded["https://instacastcloud.com/bootstrap/fonts/glyphicons-halflings-regular.svg"] = true
+downloaded["https://instacastcloud.com/images/icon-50.png"] = true
+downloaded["https://instacastcloud.com/mediaelement/bigplay.svg"] = true
+downloaded["https://instacastcloud.com/mediaelement/bigplay.png"] = true
+downloaded["https://instacastcloud.com/mediaelement/background.png"] = true
+downloaded["https://instacastcloud.com/mediaelement/loading.gif"] = true
+downloaded["https://instacastcloud.com/mediaelement/controls.svg"] = true
+downloaded["https://instacastcloud.com/mediaelement/controls.png"] = true
+
 read_file = function(file)
   if file then
     local f = assert(io.open(file))
@@ -29,7 +59,7 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
   end
   
   if (downloaded[url] ~= true or addedtolist[url] ~= true) then
-    if (string.match(url, "/"..item_value.."[a-z0-9]") and string.match(url, "https?://instacastcloud%.com/") and not string.match(url, "/"..item_value.."[a-z0-9][a-z0-9]")) or html == 0 then
+    if (string.match(url, "/"..item_value) and string.match(url, "https?://instacastcloud%.com/") and not string.match(url, "/"..item_value.."[a-z0-9]")) or html == 0 then
       addedtolist[url] = true
       return true
     else
@@ -42,7 +72,11 @@ end
 wget.callbacks.get_urls = function(file, url, is_css, iri)
   local urls = {}
   local html = nil
-  
+
+  if downloaded[url] ~= true then
+    downloaded[url] = true
+  end
+ 
   local function check(url)
     if (downloaded[url] ~= true and addedtolist[url] ~= true) then
       if string.match(url, "&amp;") then
@@ -58,16 +92,20 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   
   if string.match(url, item_value) then
     html = read_file(file)
-    for newurl in string.gmatch(html, 'src="(https?://[^"]+)"') do
-      check(newurl)
+    for newurl in string.gmatch(html, 'src=("https?.//[^"]+)"') do
+      if not string.match(newurl, '"https?://') then
+        check(string.match(newurl, '"(https?)')..":"..string.match(newurl, '"https?.(//.+)'))
+      else
+        check(string.match(newurl, '"(.+)'))
+      end
     end
     for newurl in string.gmatch(html, '"(https?://[^"]+)"') do
-      if (string.match(url, "/"..item_value.."[a-z0-9]") and string.match(url, "https?://instacastcloud%.com/") and not string.match(url, "/"..item_value.."[a-z0-9][a-z0-9]")) then
+      if (string.match(url, "/"..item_value) and string.match(url, "https?://instacastcloud%.com/") and not string.match(url, "/"..item_value.."[a-z0-9]")) then
         check(newurl)
       end
     end
     for newurl in string.gmatch(html, '"(/[^"]+)"') do
-      if (string.match(url, "/"..item_value.."[a-z0-9]") and string.match(url, "https?://instacastcloud%.com/") and not string.match(url, "/"..item_value.."[a-z0-9][a-z0-9]")) then
+      if (string.match(url, "/"..item_value) and string.match(url, "https?://instacastcloud%.com/") and not string.match(url, "/"..item_value.."[a-z0-9]")) then
         check("https://instacastcloud.com"..newurl)
       end
     end
